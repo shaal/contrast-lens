@@ -9,6 +9,7 @@ import {
   parseColor,
   rgbToHex,
 } from "./lib/contrast-engine";
+import { buildContrastGuides, hsvToRgb, rgbToHsv } from "./lib/color-map";
 
 type ColorSide = "foreground" | "background";
 type WcagTarget = "AA" | "AAA";
@@ -26,6 +27,9 @@ const toast = ref("");
 const activeHelp = ref<string | null>(null);
 const helpPosition = ref<{ top: number; left: number } | null>(null);
 const wcagTarget = ref<WcagTarget>("AA");
+const activeMapSide = ref<ColorSide>("foreground");
+const mapRef = ref<HTMLElement | null>(null);
+const mapDragging = ref(false);
 
 const result = computed(() =>
   contrastResult(foreground.value, background.value),
@@ -61,6 +65,35 @@ const targetCopy = computed(() =>
   targetPass.value
     ? `This pair reaches the ${wcagTarget.value} target for normal text.`
     : `This pair is below the ${wcagTarget.value} target. Try a darker text color or a lighter background.`,
+);
+const mapColor = computed(() =>
+  activeMapSide.value === "foreground" ? foreground.value : background.value,
+);
+const mapReference = computed(() =>
+  activeMapSide.value === "foreground" ? background.value : foreground.value,
+);
+const mapHsv = computed(() => rgbToHsv(mapColor.value));
+const mapGuides = computed(() =>
+  buildContrastGuides(
+    activeMapSide.value,
+    mapHsv.value.h,
+    mapReference.value,
+  ).map((guide) => ({
+    ...guide,
+    labelY: guide.points[0]?.y ?? null,
+    isTarget: guide.threshold === targetRatio.value,
+  })),
+);
+const mapBackgroundStyle = computed(() => ({
+  backgroundImage: `linear-gradient(to top, rgb(0 0 0), transparent), linear-gradient(to right, rgb(255 255 255), hsl(${mapHsv.value.h} 100% 50%))`,
+}));
+const mapKnobStyle = computed(() => ({
+  left: `${Math.min(98.5, Math.max(1.5, mapHsv.value.s * 100))}%`,
+  top: `${Math.min(98.5, Math.max(1.5, (1 - mapHsv.value.v) * 100))}%`,
+  backgroundColor: formatColor(mapColor.value, "HEX"),
+}));
+const mapColorLabel = computed(
+  () => `${activeMapSide.value} ${formatColor(mapColor.value, "HEX")}`,
 );
 const helpStyle = computed(() =>
   helpPosition.value
@@ -171,6 +204,89 @@ function closeHelp(): void {
   helpPosition.value = null;
 }
 
+function setMapSide(side: ColorSide): void {
+  activeMapSide.value = side;
+}
+
+function updateMapColor(saturation: number, value: number): void {
+  const nextColor = hsvToRgb({
+    h: mapHsv.value.h,
+    s: Math.min(1, Math.max(0, saturation)),
+    v: Math.min(1, Math.max(0, value)),
+  });
+  if (activeMapSide.value === "foreground") {
+    foreground.value = nextColor;
+    foregroundInput.value = formatColor(nextColor, foregroundFormat.value);
+  } else {
+    background.value = nextColor;
+    backgroundInput.value = formatColor(nextColor, backgroundFormat.value);
+  }
+}
+
+function setMapPosition(event: PointerEvent): void {
+  const bounds = mapRef.value?.getBoundingClientRect();
+  if (!bounds) return;
+  const saturation = (event.clientX - bounds.left) / bounds.width;
+  const value = 1 - (event.clientY - bounds.top) / bounds.height;
+  updateMapColor(saturation, value);
+}
+
+function stopMapDrag(): void {
+  mapDragging.value = false;
+  document.removeEventListener("pointermove", handleMapPointerMove);
+  document.removeEventListener("pointerup", stopMapDrag);
+  document.removeEventListener("pointercancel", stopMapDrag);
+}
+
+function handleMapPointerMove(event: PointerEvent): void {
+  if (mapDragging.value) setMapPosition(event);
+}
+
+function startMapDrag(event: PointerEvent): void {
+  if (event.button !== 0 && event.pointerType !== "touch") return;
+  event.preventDefault();
+  mapDragging.value = true;
+  setMapPosition(event);
+  document.addEventListener("pointermove", handleMapPointerMove);
+  document.addEventListener("pointerup", stopMapDrag);
+  document.addEventListener("pointercancel", stopMapDrag);
+}
+
+function nudgeMap(event: KeyboardEvent): void {
+  const step = event.shiftKey ? 0.1 : 0.02;
+  let saturation = mapHsv.value.s;
+  let value = mapHsv.value.v;
+  if (event.key === "ArrowLeft") saturation -= step;
+  else if (event.key === "ArrowRight") saturation += step;
+  else if (event.key === "ArrowUp") value += step;
+  else if (event.key === "ArrowDown") value -= step;
+  else if (event.key === "Home") {
+    saturation = 0;
+    value = 1;
+  } else if (event.key === "End") {
+    saturation = 1;
+    value = 0;
+  } else return;
+  event.preventDefault();
+  updateMapColor(saturation, value);
+}
+
+function setMapHue(event: Event): void {
+  const hue = Number((event.target as HTMLInputElement).value);
+  const nextColor = hsvToRgb({
+    h: hue,
+    s: mapHsv.value.s,
+    v: mapHsv.value.v,
+  });
+  if (activeMapSide.value === "foreground") {
+    foreground.value = nextColor;
+    foregroundInput.value = formatColor(nextColor, foregroundFormat.value);
+  } else {
+    background.value = nextColor;
+    backgroundInput.value = formatColor(nextColor, backgroundFormat.value);
+  }
+}
+
 function status(threshold: number): "Pass" | "Review" {
   return result.value.ratio >= threshold ? "Pass" : "Review";
 }
@@ -213,7 +329,10 @@ onMounted(() => {
     if (event.key === "Escape") closeHelp();
   };
   window.addEventListener("keydown", handleEscape);
-  onUnmounted(() => window.removeEventListener("keydown", handleEscape));
+  onUnmounted(() => {
+    window.removeEventListener("keydown", handleEscape);
+    stopMapDrag();
+  });
 });
 </script>
 
@@ -479,6 +598,167 @@ onMounted(() => {
             </div>
           </article>
         </div>
+
+        <section
+          class="contrast-map-block"
+          aria-labelledby="contrast-map-heading"
+        >
+          <div class="map-heading-row">
+            <div>
+              <div class="result-kicker-line">
+                <h3 id="contrast-map-heading" class="map-heading">
+                  Contrast map
+                </h3>
+                <span class="help-wrap">
+                  <button
+                    class="help-button"
+                    type="button"
+                    aria-label="What is the contrast map?"
+                    :aria-expanded="activeHelp === 'map'"
+                    @click.stop="toggleHelp('map', $event)"
+                  >
+                    ?
+                  </button>
+                  <span
+                    v-if="activeHelp === 'map'"
+                    class="help-popover"
+                    :style="helpStyle"
+                    role="tooltip"
+                    >The dot is your color. Drag it to try nearby colors. The
+                    lines show where contrast ratios 3, 4.5, and 7 are
+                    reached.</span
+                  >
+                </span>
+              </div>
+              <p class="map-intro">
+                Drag the {{ activeMapSide }} dot. The other color stays still.
+              </p>
+            </div>
+            <div
+              class="map-side-picker"
+              role="group"
+              aria-label="Color to edit"
+            >
+              <button
+                type="button"
+                :class="{ 'map-side-selected': activeMapSide === 'foreground' }"
+                :aria-pressed="activeMapSide === 'foreground'"
+                @click="setMapSide('foreground')"
+              >
+                <span
+                  class="map-side-dot"
+                  :style="{ backgroundColor: foregroundHex }"
+                ></span
+                >Foreground
+              </button>
+              <button
+                type="button"
+                :class="{ 'map-side-selected': activeMapSide === 'background' }"
+                :aria-pressed="activeMapSide === 'background'"
+                @click="setMapSide('background')"
+              >
+                <span
+                  class="map-side-dot"
+                  :style="{ backgroundColor: backgroundHex }"
+                ></span
+                >Background
+              </button>
+            </div>
+          </div>
+
+          <div class="contrast-map-layout">
+            <div class="map-axis" aria-hidden="true">
+              <span>light</span><span>dark</span>
+            </div>
+            <div
+              ref="mapRef"
+              class="contrast-map"
+              :style="mapBackgroundStyle"
+              role="group"
+              :aria-label="`Contrast map for ${activeMapSide}`"
+              @pointerdown="startMapDrag"
+            >
+              <svg
+                class="contrast-map-guides"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <path
+                  v-for="guide in mapGuides"
+                  :key="guide.threshold"
+                  :d="guide.path"
+                  :class="{
+                    'contrast-map-line-target': guide.isTarget,
+                    'contrast-map-line-muted': !guide.isTarget,
+                  }"
+                />
+              </svg>
+              <span
+                v-for="guide in mapGuides"
+                :key="`label-${guide.threshold}`"
+                class="contrast-map-label"
+                :class="{ 'contrast-map-label-target': guide.isTarget }"
+                :style="
+                  guide.labelY === null ? {} : { top: `${guide.labelY}%` }
+                "
+                aria-hidden="true"
+                >{{ guide.threshold }}</span
+              >
+              <button
+                class="map-knob"
+                type="button"
+                :style="mapKnobStyle"
+                role="slider"
+                :aria-label="`${activeMapSide} color position`"
+                :aria-valuemin="0"
+                :aria-valuemax="100"
+                :aria-valuenow="Math.round(mapHsv.s * 100)"
+                :aria-valuetext="`${mapColorLabel}. Use arrow keys to adjust.`"
+                @pointerdown.stop="startMapDrag"
+                @keydown="nudgeMap"
+              >
+                <span aria-hidden="true"></span>
+              </button>
+            </div>
+          </div>
+
+          <label class="hue-control">
+            <span>Hue</span>
+            <input
+              type="range"
+              min="0"
+              max="360"
+              step="1"
+              :value="mapHsv.h"
+              aria-label="Map hue"
+              @input="setMapHue"
+            />
+            <output>{{ Math.round(mapHsv.h) }}°</output>
+          </label>
+          <div class="map-footer">
+            <span class="map-readout" aria-live="polite">{{
+              mapColorLabel
+            }}</span>
+            <div class="map-legend" aria-label="WCAG guide lines">
+              <span><i class="map-legend-line"></i>3 large / UI</span>
+              <span
+                ><i
+                  class="map-legend-line"
+                  :class="{ 'map-legend-line-target': targetRatio === 4.5 }"
+                ></i
+                >4.5 AA</span
+              >
+              <span
+                ><i
+                  class="map-legend-line"
+                  :class="{ 'map-legend-line-target': targetRatio === 7 }"
+                ></i
+                >7 AAA</span
+              >
+            </div>
+          </div>
+        </section>
 
         <div class="result-grid">
           <div class="result-main">

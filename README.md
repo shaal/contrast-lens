@@ -8,6 +8,7 @@ Contrast Lens is a local-first visual checker for the relationship between two c
 - Checks directional APCA 0.0.98G with body and large-type guides.
 - Accepts HEX, RGB, HSL, LCH, and OKLCH input values.
 - Shows a contrast ramp and three realistic samples: body, large type, and UI/graphics.
+- Includes a draggable HSV contrast map with live WCAG 3, 4.5, and 7 guide lines; switch between foreground and background editing.
 - Offers an optional, adjustable blur lens driven by the contrast result.
 - Includes click-to-explain ELI5 help bubbles and an AA/AAA focus selector with target-specific success feedback.
 - Keeps all calculations in the browser with no tracking or API calls.
@@ -40,7 +41,7 @@ npx playwright install chromium
 
 ## Architecture
 
-The framework-free engine lives in [`src/lib/contrast-engine.ts`](src/lib/contrast-engine.ts). It owns parsing, sRGB conversion, luminance, WCAG, APCA, and the blur signal. The Vue single-file component only owns interaction state and presentation. The decisions behind the stack are recorded in [`ADR/`](ADR/).
+The framework-free engine lives in [`src/lib/contrast-engine.ts`](src/lib/contrast-engine.ts). It owns parsing, sRGB conversion, luminance, WCAG, APCA, and the blur signal. The map calculations live in [`src/lib/color-map.ts`](src/lib/color-map.ts), while the Vue single-file component owns interaction state and presentation. The decisions behind the stack are recorded in [`ADR/`](ADR/).
 
 ## Cloudflare Pages
 
