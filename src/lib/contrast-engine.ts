@@ -179,7 +179,9 @@ export function blurPercent(ratio: number): number {
 }
 
 export function blurPercentForTarget(ratio: number, threshold: number): number {
-  return ratio >= threshold ? 0 : blurPercent(ratio);
+  if (ratio >= threshold) return 0;
+  const distanceToTarget = (threshold - ratio) / (threshold - 1);
+  return round(clamp(distanceToTarget) ** 1.47 * 100, 0);
 }
 
 export function contrastResult(foreground: RgbColor, background: RgbColor): ContrastResult {

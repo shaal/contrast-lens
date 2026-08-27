@@ -59,8 +59,12 @@ describe("contrast engine", () => {
   });
 
   it("uses the selected WCAG target to decide when the lens is clear", () => {
-    expect(blurPercentForTarget(4.52, 4.5)).toBe(0);
-    expect(blurPercentForTarget(4.52, 7)).toBeGreaterThan(0);
+    expect(blurPercentForTarget(1, 4.5)).toBe(100);
+    expect(blurPercentForTarget(3, 4.5)).toBe(29);
+    expect(blurPercentForTarget(4.5, 4.5)).toBe(0);
+    expect(blurPercentForTarget(4.52, 7)).toBe(27);
+    expect(blurPercentForTarget(3, 7)).toBe(55);
+    expect(blurPercentForTarget(4.5, 7)).toBe(28);
     expect(blurPercentForTarget(7, 7)).toBe(0);
   });
 
