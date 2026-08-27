@@ -9,7 +9,7 @@ Contrast Lens is a local-first visual checker for the relationship between two c
 - Accepts HEX, RGB, HSL, LCH, and OKLCH input values.
 - Shows a static, proportional ratio scale plus three realistic samples: body, large type, and UI/graphics.
 - Includes a draggable HSV contrast map with live WCAG 3, 4.5, and 7 guide lines; switch between foreground and background editing.
-- Starts with an adjustable blur lens enabled: text stays crisp when the selected WCAG focus passes and blurs below that target.
+- Starts with an adjustable blur lens enabled: text stays crisp when the selected WCAG focus passes and blurs below that target. The UI shows the actual applied blur percentage.
 - Includes click-to-explain ELI5 help bubbles and an AA/AAA focus selector with target-specific success feedback.
 - Keeps all calculations in the browser with no tracking or API calls.
 - Includes responsive layout, keyboard focus states, reduced-motion support, unit tests, e2e tests, and a repeatable benchmark.

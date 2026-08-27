@@ -58,7 +58,7 @@ const backgroundHex = computed(() => rgbToHex(background.value));
 const blurCopy = computed(() =>
   targetPass.value
     ? `${wcagTarget.value} target met — text stays clear.`
-    : `${wcagTarget.value} target not met — ${effectiveBlur.value}% blur pressure at this contrast.`,
+    : `${wcagTarget.value} target not met — the preview is softened below the selected target.`,
 );
 const ratioThresholds = [
   { value: 3, label: "UI / large" },
@@ -1027,6 +1027,19 @@ onMounted(() => {
                 @input="setBlurIntensity"
                 aria-label="Blur lens intensity"
             /></label>
+            <div
+              class="blur-level"
+              :class="{
+                'blur-level-clear': blurEnabled && effectiveBlur === 0,
+                'blur-level-disabled': !blurEnabled,
+              }"
+              aria-live="polite"
+            >
+              <span>Applied blur</span>
+              <strong>{{
+                blurEnabled ? `${effectiveBlur.toFixed(0)}%` : "Off"
+              }}</strong>
+            </div>
             <p class="blur-note">
               <span aria-hidden="true">◌</span>
               {{

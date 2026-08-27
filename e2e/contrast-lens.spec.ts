@@ -55,7 +55,10 @@ test.describe("Contrast Lens", () => {
     const lens = page.getByLabel("Enable blur lens");
     await lens.check();
     await expect(page.getByLabel("Blur lens intensity")).toBeEnabled();
-    await expect(page.locator(".blur-note")).toContainText("blur pressure");
+    await expect(page.locator(".blur-note")).toContainText(
+      "softened below the selected target",
+    );
+    await expect(page.locator(".blur-level strong")).toHaveText("68%");
   });
 
   test("enables the blur lens by default and follows the selected WCAG target", async ({
@@ -69,6 +72,7 @@ test.describe("Contrast Lens", () => {
       "blur(0px)",
     );
     await expect(page.locator(".blur-note")).toContainText("AA target met");
+    await expect(page.locator(".blur-level strong")).toHaveText("0%");
     await expect(page.locator(".preview-status")).toContainText("AA · Clear");
 
     await page.getByRole("button", { name: "WCAG AAA target" }).click();
@@ -79,12 +83,14 @@ test.describe("Contrast Lens", () => {
     await expect(page.locator(".blur-note")).toContainText(
       "AAA target not met",
     );
+    await expect(page.locator(".blur-level strong")).toHaveText("68%");
 
     await page.getByLabel("Foreground", { exact: true }).fill("#000000");
     await expect(page.locator(".preview-content")).toHaveCSS(
       "filter",
       "blur(0px)",
     );
+    await expect(page.locator(".blur-level strong")).toHaveText("0%");
     await expect(page.locator(".preview-status")).toContainText("AAA · Clear");
   });
 

@@ -1211,6 +1211,27 @@ h3 em {
   display: block;
   width: 100%;
 }
+.blur-level {
+  align-items: center;
+  color: #6f6974;
+  display: flex;
+  font-family: "DM Mono", monospace;
+  font-size: 9px;
+  justify-content: space-between;
+  margin-top: 10px;
+  max-width: 320px;
+  text-transform: uppercase;
+}
+.blur-level strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+.blur-level-clear strong {
+  color: #287c5d;
+}
+.blur-level-disabled {
+  opacity: 0.46;
+}
 .blur-note {
   align-items: center;
   color: #9a949d;
