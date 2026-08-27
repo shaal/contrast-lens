@@ -522,6 +522,44 @@ h3 em {
   letter-spacing: -0.06em;
   margin: 0;
 }
+.map-controls {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.map-mode-picker {
+  background: #f5f3f7;
+  border: 1px solid #e3dfe8;
+  border-radius: 999px;
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+}
+.map-mode-picker button {
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: #77717d;
+  cursor: pointer;
+  font-family: "DM Mono", monospace;
+  font-size: 9px;
+  padding: 8px 10px;
+  text-transform: uppercase;
+  transition:
+    background 180ms ease,
+    color 180ms ease;
+}
+.map-mode-picker button:hover,
+.map-mode-picker button:focus-visible {
+  color: var(--violet);
+  outline: none;
+}
+.map-mode-picker button.map-mode-selected {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(32, 27, 39, 0.08);
+  color: var(--ink);
+}
 .map-intro {
   color: var(--muted);
   font-size: 12px;
@@ -617,6 +655,9 @@ h3 em {
 .contrast-map-guides path.contrast-map-line-target {
   stroke: #fff;
   stroke-width: 2;
+}
+.contrast-map-guides path.contrast-map-line-negative {
+  stroke-dasharray: 4 3;
 }
 .contrast-map-label {
   background: rgba(255, 255, 255, 0.82);
@@ -722,11 +763,22 @@ h3 em {
   justify-content: space-between;
   margin: 16px 0 0 44px;
 }
+.map-readout-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
 .map-readout {
   color: #77717d;
   font-family: "DM Mono", monospace;
   font-size: 9px;
   text-transform: uppercase;
+}
+.map-measure-readout {
+  color: var(--ink);
+  font-family: "DM Mono", monospace;
+  font-size: 11px;
+  font-weight: 500;
 }
 .map-legend {
   color: #99939d;
@@ -749,6 +801,9 @@ h3 em {
 }
 .map-legend-line-target {
   border-top: 2px solid var(--violet);
+}
+.map-legend-line-negative {
+  border-top-style: dashed;
 }
 .result-grid {
   background: #faf9fc;
@@ -1792,6 +1847,16 @@ h3 em {
   .map-heading-row {
     flex-direction: column;
     gap: 15px;
+  }
+  .map-controls {
+    align-items: stretch;
+    width: 100%;
+  }
+  .map-mode-picker {
+    width: 100%;
+  }
+  .map-mode-picker button {
+    flex: 1;
   }
   .map-side-picker {
     align-self: stretch;

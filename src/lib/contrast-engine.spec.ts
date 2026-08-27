@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildApcaGuides,
   buildContrastGuide,
   buildContrastGuides,
   hsvToRgb,
@@ -97,5 +98,21 @@ describe("contrast engine", () => {
     expect(buildContrastGuide("foreground", 247, 99, white).points.length).toBe(
       0,
     );
+  });
+
+  it("creates APCA Lc guide curves for the map", () => {
+    const guides = buildApcaGuides("foreground", 247, white);
+
+    expect(guides.map((guide) => guide.threshold)).toEqual([
+      45, 60, 75, -45, -60, -75,
+    ]);
+    expect(
+      guides.some(
+        (guide) => guide.threshold === 60 && guide.points.length > 20,
+      ),
+    ).toBe(true);
+    expect(
+      guides.every((guide) => guide.path === "" || guide.path.startsWith("M")),
+    ).toBe(true);
   });
 });

@@ -1,4 +1,8 @@
-import { type RgbColor, wcagContrastRatio } from "./contrast-engine";
+import {
+  apcaContrast,
+  type RgbColor,
+  wcagContrastRatio,
+} from "./contrast-engine";
 
 export interface HsvColor {
   readonly h: number;
@@ -85,6 +89,61 @@ function ratioAtPosition(
     : wcagContrastRatio(reference, movingColor);
 }
 
+function apcaAtPosition(
+  side: MapSide,
+  hue: number,
+  saturation: number,
+  value: number,
+  reference: RgbColor,
+): number {
+  const movingColor = hsvToRgb({ h: hue, s: saturation, v: value });
+  return side === "foreground"
+    ? apcaContrast(movingColor, reference)
+    : apcaContrast(reference, movingColor);
+}
+
+function solveMetricThreshold(
+  side: MapSide,
+  hue: number,
+  saturation: number,
+  threshold: number,
+  reference: RgbColor,
+  metricAtPosition: typeof ratioAtPosition,
+  tolerance: number,
+): number | null {
+  let low = 0;
+  let high = 1;
+  const lowMetric = metricAtPosition(side, hue, saturation, low, reference);
+  const highMetric = metricAtPosition(side, hue, saturation, high, reference);
+  const minimum = Math.min(lowMetric, highMetric);
+  const maximum = Math.max(lowMetric, highMetric);
+
+  if (threshold < minimum || threshold > maximum) return null;
+  if (Math.abs(lowMetric - threshold) < tolerance) return 0;
+  if (Math.abs(highMetric - threshold) < tolerance) return 1;
+
+  const increasing = highMetric > lowMetric;
+  for (let iteration = 0; iteration < 24; iteration += 1) {
+    const middle = (low + high) / 2;
+    const middleMetric = metricAtPosition(
+      side,
+      hue,
+      saturation,
+      middle,
+      reference,
+    );
+    if (Math.abs(middleMetric - threshold) < tolerance) return middle;
+
+    if (increasing) {
+      if (middleMetric < threshold) low = middle;
+      else high = middle;
+    } else if (middleMetric > threshold) low = middle;
+    else high = middle;
+  }
+
+  return (low + high) / 2;
+}
+
 function solveThreshold(
   side: MapSide,
   hue: number,
@@ -92,37 +151,15 @@ function solveThreshold(
   threshold: number,
   reference: RgbColor,
 ): number | null {
-  let low = 0;
-  let high = 1;
-  const lowRatio = ratioAtPosition(side, hue, saturation, low, reference);
-  const highRatio = ratioAtPosition(side, hue, saturation, high, reference);
-  const minimum = Math.min(lowRatio, highRatio);
-  const maximum = Math.max(lowRatio, highRatio);
-
-  if (threshold < minimum || threshold > maximum) return null;
-  if (Math.abs(lowRatio - threshold) < 0.005) return 0;
-  if (Math.abs(highRatio - threshold) < 0.005) return 1;
-
-  const increasing = highRatio > lowRatio;
-  for (let iteration = 0; iteration < 24; iteration += 1) {
-    const middle = (low + high) / 2;
-    const middleRatio = ratioAtPosition(
-      side,
-      hue,
-      saturation,
-      middle,
-      reference,
-    );
-    if (Math.abs(middleRatio - threshold) < 0.005) return middle;
-
-    if (increasing) {
-      if (middleRatio < threshold) low = middle;
-      else high = middle;
-    } else if (middleRatio > threshold) low = middle;
-    else high = middle;
-  }
-
-  return (low + high) / 2;
+  return solveMetricThreshold(
+    side,
+    hue,
+    saturation,
+    threshold,
+    reference,
+    ratioAtPosition,
+    0.005,
+  );
 }
 
 export function buildContrastGuide(
@@ -154,5 +191,45 @@ export function buildContrastGuides(
 ): ContrastGuide[] {
   return thresholds.map((threshold) =>
     buildContrastGuide(side, hue, threshold, reference),
+  );
+}
+
+export function buildApcaGuide(
+  side: MapSide,
+  hue: number,
+  threshold: number,
+  reference: RgbColor,
+  samples = 48,
+): ContrastGuide {
+  const points: GuidePoint[] = [];
+  for (let index = 0; index <= samples; index += 1) {
+    const x = (index / samples) * 100;
+    const saturation = index / samples;
+    const value = solveMetricThreshold(
+      side,
+      hue,
+      saturation,
+      threshold,
+      reference,
+      apcaAtPosition,
+      0.5,
+    );
+    if (value !== null) points.push({ x, y: (1 - value) * 100 });
+  }
+
+  const path = points
+    .map(({ x, y }, index) => `${index === 0 ? "M" : "L"} ${x},${y}`)
+    .join(" ");
+  return { threshold, points, path };
+}
+
+export function buildApcaGuides(
+  side: MapSide,
+  hue: number,
+  reference: RgbColor,
+  thresholds: readonly number[] = [45, 60, 75, -45, -60, -75],
+): ContrastGuide[] {
+  return thresholds.map((threshold) =>
+    buildApcaGuide(side, hue, threshold, reference),
   );
 }

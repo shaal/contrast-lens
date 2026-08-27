@@ -143,6 +143,26 @@ test.describe("Contrast Lens", () => {
     ).not.toHaveValue("#FFFFFF");
   });
 
+  test("switches the map to live APCA Lc guides", async ({ page }) => {
+    await page.goto("/#checker");
+    const measure = page.locator(".map-measure-readout");
+    await expect(measure).toHaveText("WCAG 4.52:1");
+
+    await page.getByRole("button", { name: "APCA Lc map mode" }).click();
+    await expect(
+      page.getByRole("button", { name: "APCA Lc map mode" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expect(
+      page.getByRole("button", { name: "WCAG ratio map mode" }),
+    ).toHaveAttribute("aria-pressed", "false");
+    await expect(measure).toHaveText("APCA Lc +70.8");
+    await expect(page.locator(".map-legend")).toContainText("Lc +60");
+    await expect(page.locator(".contrast-map-guides path")).not.toHaveCount(0);
+
+    await page.getByLabel("Background", { exact: true }).fill("#000000");
+    await expect(measure).not.toHaveText("APCA Lc +70.8");
+  });
+
   test("lets users choose AA or AAA and shows the chosen success state", async ({
     page,
   }) => {

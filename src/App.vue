@@ -10,9 +10,15 @@ import {
   parseColor,
   rgbToHex,
 } from "./lib/contrast-engine";
-import { buildContrastGuides, hsvToRgb, rgbToHsv } from "./lib/color-map";
+import {
+  buildApcaGuides,
+  buildContrastGuides,
+  hsvToRgb,
+  rgbToHsv,
+} from "./lib/color-map";
 
 type ColorSide = "foreground" | "background";
+type MapMode = "wcag" | "apca";
 type WcagTarget = "AA" | "AAA";
 
 const formats: ColorFormat[] = ["HEX", "RGB", "HSL", "LCH", "OKLCH"];
@@ -29,8 +35,10 @@ const activeHelp = ref<string | null>(null);
 const helpPosition = ref<{ top: number; left: number } | null>(null);
 const wcagTarget = ref<WcagTarget>("AA");
 const activeMapSide = ref<ColorSide>("foreground");
+const mapMode = ref<MapMode>("wcag");
 const mapRef = ref<HTMLElement | null>(null);
 const mapDragging = ref(false);
+const apcaMapThresholds = [45, 60, 75, -45, -60, -75] as const;
 
 const result = computed(() =>
   contrastResult(foreground.value, background.value),
@@ -84,17 +92,45 @@ const mapReference = computed(() =>
   activeMapSide.value === "foreground" ? background.value : foreground.value,
 );
 const mapHsv = computed(() => rgbToHsv(mapColor.value));
-const mapGuides = computed(() =>
-  buildContrastGuides(
-    activeMapSide.value,
-    mapHsv.value.h,
-    mapReference.value,
-  ).map((guide) => ({
-    ...guide,
-    labelY: guide.points[0]?.y ?? null,
-    isTarget: guide.threshold === targetRatio.value,
-  })),
+const mapHelpCopy = computed(() =>
+  mapMode.value === "wcag"
+    ? "The dot is your color. Drag it to try nearby colors. The lines show where contrast ratios 3, 4.5, and 7 are reached."
+    : "The dot is your color. Drag it to try nearby colors. The lines show APCA Lc levels in both directions.",
 );
+const mapGuides = computed(() => {
+  const guides =
+    mapMode.value === "wcag"
+      ? buildContrastGuides(
+          activeMapSide.value,
+          mapHsv.value.h,
+          mapReference.value,
+        )
+      : buildApcaGuides(
+          activeMapSide.value,
+          mapHsv.value.h,
+          mapReference.value,
+          apcaMapThresholds,
+        );
+
+  return guides.map((guide) => ({
+    ...guide,
+    label:
+      mapMode.value === "wcag"
+        ? `${guide.threshold}`
+        : `Lc ${guide.threshold > 0 ? "+" : ""}${guide.threshold}`,
+    labelY: guide.points[0]?.y ?? null,
+    isTarget:
+      mapMode.value === "wcag"
+        ? guide.threshold === targetRatio.value
+        : Math.abs(guide.threshold) === 60,
+    polarity:
+      mapMode.value === "apca"
+        ? guide.threshold > 0
+          ? "positive"
+          : "negative"
+        : null,
+  }));
+});
 const mapBackgroundStyle = computed(() => ({
   backgroundImage: `linear-gradient(to top, rgb(0 0 0), transparent), linear-gradient(to right, rgb(255 255 255), hsl(${mapHsv.value.h} 100% 50%))`,
 }));
@@ -105,6 +141,9 @@ const mapKnobStyle = computed(() => ({
 }));
 const mapColorLabel = computed(
   () => `${activeMapSide.value} ${formatColor(mapColor.value, "HEX")}`,
+);
+const mapMeasure = computed(() =>
+  mapMode.value === "wcag" ? `WCAG ${ratio.value}:1` : `APCA Lc ${apca.value}`,
 );
 const helpStyle = computed(() =>
   helpPosition.value
@@ -217,6 +256,10 @@ function closeHelp(): void {
 
 function setMapSide(side: ColorSide): void {
   activeMapSide.value = side;
+}
+
+function setMapMode(mode: MapMode): void {
+  mapMode.value = mode;
 }
 
 function updateMapColor(saturation: number, value: number): void {
@@ -635,9 +678,7 @@ onMounted(() => {
                     class="help-popover"
                     :style="helpStyle"
                     role="tooltip"
-                    >The dot is your color. Drag it to try nearby colors. The
-                    lines show where contrast ratios 3, 4.5, and 7 are
-                    reached.</span
+                    >{{ mapHelpCopy }}</span
                   >
                 </span>
               </div>
@@ -645,35 +686,65 @@ onMounted(() => {
                 Drag the {{ activeMapSide }} dot. The other color stays still.
               </p>
             </div>
-            <div
-              class="map-side-picker"
-              role="group"
-              aria-label="Color to edit"
-            >
-              <button
-                type="button"
-                :class="{ 'map-side-selected': activeMapSide === 'foreground' }"
-                :aria-pressed="activeMapSide === 'foreground'"
-                @click="setMapSide('foreground')"
+            <div class="map-controls">
+              <div
+                class="map-mode-picker"
+                role="group"
+                aria-label="Map measure"
               >
-                <span
-                  class="map-side-dot"
-                  :style="{ backgroundColor: foregroundHex }"
-                ></span
-                >Foreground
-              </button>
-              <button
-                type="button"
-                :class="{ 'map-side-selected': activeMapSide === 'background' }"
-                :aria-pressed="activeMapSide === 'background'"
-                @click="setMapSide('background')"
+                <button
+                  type="button"
+                  :class="{ 'map-mode-selected': mapMode === 'wcag' }"
+                  :aria-pressed="mapMode === 'wcag'"
+                  aria-label="WCAG ratio map mode"
+                  @click="setMapMode('wcag')"
+                >
+                  WCAG ratio
+                </button>
+                <button
+                  type="button"
+                  :class="{ 'map-mode-selected': mapMode === 'apca' }"
+                  :aria-pressed="mapMode === 'apca'"
+                  aria-label="APCA Lc map mode"
+                  @click="setMapMode('apca')"
+                >
+                  APCA Lc
+                </button>
+              </div>
+              <div
+                class="map-side-picker"
+                role="group"
+                aria-label="Color to edit"
               >
-                <span
-                  class="map-side-dot"
-                  :style="{ backgroundColor: backgroundHex }"
-                ></span
-                >Background
-              </button>
+                <button
+                  type="button"
+                  :class="{
+                    'map-side-selected': activeMapSide === 'foreground',
+                  }"
+                  :aria-pressed="activeMapSide === 'foreground'"
+                  @click="setMapSide('foreground')"
+                >
+                  <span
+                    class="map-side-dot"
+                    :style="{ backgroundColor: foregroundHex }"
+                  ></span
+                  >Foreground
+                </button>
+                <button
+                  type="button"
+                  :class="{
+                    'map-side-selected': activeMapSide === 'background',
+                  }"
+                  :aria-pressed="activeMapSide === 'background'"
+                  @click="setMapSide('background')"
+                >
+                  <span
+                    class="map-side-dot"
+                    :style="{ backgroundColor: backgroundHex }"
+                  ></span
+                  >Background
+                </button>
+              </div>
             </div>
           </div>
 
@@ -686,7 +757,7 @@ onMounted(() => {
               class="contrast-map"
               :style="mapBackgroundStyle"
               role="group"
-              :aria-label="`Contrast map for ${activeMapSide}`"
+              :aria-label="`${mapMode === 'wcag' ? 'WCAG ratio' : 'APCA Lc'} map for ${activeMapSide}`"
               @pointerdown="startMapDrag"
             >
               <svg
@@ -702,20 +773,23 @@ onMounted(() => {
                   :class="{
                     'contrast-map-line-target': guide.isTarget,
                     'contrast-map-line-muted': !guide.isTarget,
+                    'contrast-map-line-negative': guide.polarity === 'negative',
                   }"
                 />
               </svg>
-              <span
+              <template
                 v-for="guide in mapGuides"
                 :key="`label-${guide.threshold}`"
-                class="contrast-map-label"
-                :class="{ 'contrast-map-label-target': guide.isTarget }"
-                :style="
-                  guide.labelY === null ? {} : { top: `${guide.labelY}%` }
-                "
-                aria-hidden="true"
-                >{{ guide.threshold }}</span
               >
+                <span
+                  v-if="guide.labelY !== null"
+                  class="contrast-map-label"
+                  :class="{ 'contrast-map-label-target': guide.isTarget }"
+                  :style="{ top: `${guide.labelY}%` }"
+                  aria-hidden="true"
+                  >{{ guide.label }}</span
+                >
+              </template>
               <button
                 class="map-knob"
                 type="button"
@@ -748,25 +822,58 @@ onMounted(() => {
             <output>{{ Math.round(mapHsv.h) }}°</output>
           </label>
           <div class="map-footer">
-            <span class="map-readout" aria-live="polite">{{
-              mapColorLabel
-            }}</span>
-            <div class="map-legend" aria-label="WCAG guide lines">
-              <span><i class="map-legend-line"></i>3 large / UI</span>
-              <span
-                ><i
-                  class="map-legend-line"
-                  :class="{ 'map-legend-line-target': targetRatio === 4.5 }"
-                ></i
-                >4.5 AA</span
-              >
-              <span
-                ><i
-                  class="map-legend-line"
-                  :class="{ 'map-legend-line-target': targetRatio === 7 }"
-                ></i
-                >7 AAA</span
-              >
+            <div class="map-readout-group">
+              <span class="map-readout">{{ mapColorLabel }}</span>
+              <span class="map-measure-readout" aria-live="polite">{{
+                mapMeasure
+              }}</span>
+            </div>
+            <div
+              class="map-legend"
+              :aria-label="`${mapMode === 'wcag' ? 'WCAG' : 'APCA'} guide lines`"
+            >
+              <template v-if="mapMode === 'wcag'">
+                <span><i class="map-legend-line"></i>3 large / UI</span>
+                <span
+                  ><i
+                    class="map-legend-line"
+                    :class="{ 'map-legend-line-target': targetRatio === 4.5 }"
+                  ></i
+                  >4.5 AA</span
+                >
+                <span
+                  ><i
+                    class="map-legend-line"
+                    :class="{ 'map-legend-line-target': targetRatio === 7 }"
+                  ></i
+                  >7 AAA</span
+                >
+              </template>
+              <template v-else>
+                <span><i class="map-legend-line"></i>Lc +45</span>
+                <span
+                  ><i
+                    class="map-legend-line"
+                    :class="{ 'map-legend-line-target': true }"
+                  ></i
+                  >Lc +60</span
+                >
+                <span><i class="map-legend-line"></i>Lc +75</span>
+                <span
+                  ><i class="map-legend-line map-legend-line-negative"></i>Lc
+                  −45</span
+                >
+                <span
+                  ><i
+                    class="map-legend-line map-legend-line-negative map-legend-line-target"
+                  ></i
+                  >Lc −60</span
+                >
+                <span
+                  ><i class="map-legend-line map-legend-line-negative"></i>Lc
+                  −75</span
+                >
+              </template>
             </div>
           </div>
         </section>

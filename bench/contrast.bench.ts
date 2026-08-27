@@ -1,5 +1,5 @@
 import { performance } from "node:perf_hooks";
-import { buildContrastGuides } from "../src/lib/color-map";
+import { buildApcaGuides, buildContrastGuides } from "../src/lib/color-map";
 import {
   contrastResult,
   hexToRgb,
@@ -32,5 +32,10 @@ measure("parse OKLCH", () => parseColor("oklch(62% 0.25 29)", "OKLCH"));
 measure(
   "contrast guides (3 lines)",
   () => buildContrastGuides("foreground", 248, background),
+  1_000,
+);
+measure(
+  "APCA guides (6 lines)",
+  () => buildApcaGuides("foreground", 248, background),
   1_000,
 );
