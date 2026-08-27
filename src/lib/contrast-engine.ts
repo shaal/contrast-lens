@@ -141,7 +141,7 @@ export function wcagContrastRatio(foreground: RgbColor, background: RgbColor): n
   const backgroundLuminance = relativeLuminance(background);
   const lighter = Math.max(foregroundLuminance, backgroundLuminance);
   const darker = Math.min(foregroundLuminance, backgroundLuminance);
-  return round((lighter + 0.05) / (darker + 0.05), 2);
+  return (lighter + 0.05) / (darker + 0.05);
 }
 
 // APCA 0.0.98G constants. APCA is directional: foreground/background order matters.
@@ -181,7 +181,8 @@ export function blurPercent(ratio: number): number {
 export function blurPercentForTarget(ratio: number, threshold: number): number {
   if (ratio >= threshold) return 0;
   const distanceToTarget = (threshold - ratio) / (threshold - 1);
-  return round(clamp(distanceToTarget) ** 1.47 * 100, 0);
+  const curvePercent = round(clamp(distanceToTarget) ** 1.47 * 100, 0);
+  return Math.max(10, curvePercent);
 }
 
 export function contrastResult(foreground: RgbColor, background: RgbColor): ContrastResult {

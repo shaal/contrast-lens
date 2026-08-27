@@ -58,7 +58,7 @@ test.describe("Contrast Lens", () => {
     await expect(page.locator(".blur-note")).toContainText(
       "softened below the selected target",
     );
-    await expect(page.locator(".blur-level strong")).toHaveText("0%");
+    await expect(page.locator(".blur-level strong")).toHaveText("10%");
   });
 
   test("enables the blur lens by default and follows the selected WCAG target", async ({

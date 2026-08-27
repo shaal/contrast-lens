@@ -34,6 +34,13 @@ describe("contrast engine", () => {
     expect(wcagContrastRatio(black, white)).toBe(21);
   });
 
+  it("keeps ratio precision for target boundaries", () => {
+    const nearAa = wcagContrastRatio(hexToRgb("#777777")!, white);
+
+    expect(nearAa).toBeCloseTo(4.478, 3);
+    expect(nearAa).toBeLessThan(4.5);
+  });
+
   it("keeps APCA directional while producing a strong score for black on white", () => {
     const darkOnLight = apcaContrast(black, white);
     const lightOnDark = apcaContrast(white, black);
@@ -61,6 +68,7 @@ describe("contrast engine", () => {
   it("uses the selected WCAG target to decide when the lens is clear", () => {
     expect(blurPercentForTarget(1, 4.5)).toBe(100);
     expect(blurPercentForTarget(3, 4.5)).toBe(29);
+    expect(blurPercentForTarget(4.499, 4.5)).toBe(10);
     expect(blurPercentForTarget(4.5, 4.5)).toBe(0);
     expect(blurPercentForTarget(4.52, 7)).toBe(27);
     expect(blurPercentForTarget(3, 7)).toBe(55);

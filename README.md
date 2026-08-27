@@ -54,7 +54,7 @@ npx wrangler pages deploy dist --project-name contrast-lens
 
 ## Notes on the blur lens
 
-The blur lens is intentionally a communication tool rather than a pass/fail criterion. It starts enabled and stays clear when the selected AA or AAA target passes. Below that target, it uses a target-relative curve: `1:1` is `100%` blur and the selected threshold is `0%` (`3:1` is about `29%` in AA mode; `4.5:1` is about `28%` in AAA mode). The slider lets a reviewer exaggerate or soften the signal. Always validate typography, layout, font rendering, and context in the real interface too.
+The blur lens is intentionally a communication tool rather than a pass/fail criterion. It starts enabled and stays clear when the selected AA or AAA target passes. Below that target, it uses a target-relative curve: `1:1` is `100%` blur, the selected threshold is `0%`, and every failing pairing gets at least `10%` (`3:1` is about `29%` in AA mode; `4.5:1` is about `28%` in AAA mode). The slider lets a reviewer exaggerate or soften the signal. Always validate typography, layout, font rendering, and context in the real interface too.
 
 ## License
 
