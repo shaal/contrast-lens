@@ -7,6 +7,7 @@ import {
 } from "./color-map";
 import {
   apcaContrast,
+  blurPercentForTarget,
   contrastResult,
   formatColor,
   hexToRgb,
@@ -55,6 +56,12 @@ describe("contrast engine", () => {
   it("derives a readable blur signal from the WCAG ratio", () => {
     expect(contrastResult(black, white).blurPercent).toBe(0);
     expect(contrastResult(white, white).blurPercent).toBe(100);
+  });
+
+  it("uses the selected WCAG target to decide when the lens is clear", () => {
+    expect(blurPercentForTarget(4.52, 4.5)).toBe(0);
+    expect(blurPercentForTarget(4.52, 7)).toBeGreaterThan(0);
+    expect(blurPercentForTarget(7, 7)).toBe(0);
   });
 
   it("round trips the HSV coordinates used by the contrast map", () => {

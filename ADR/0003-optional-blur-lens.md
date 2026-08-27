@@ -1,4 +1,4 @@
-# ADR 0003: Add an optional blur lens for perceptual feedback
+# ADR 0003: Add a blur lens for perceptual feedback
 
 - Status: accepted
 - Date: 2026-08-27
@@ -9,7 +9,7 @@ A number can tell a designer that a color pairing is weak without making the con
 
 ## Decision
 
-Expose a checkbox and intensity slider called the blur lens. The default state is off. When enabled, the text preview applies a capped CSS blur derived from the WCAG ratio and multiplied by the user's chosen intensity. The UI always keeps the underlying ratio, APCA score, and pass states visible.
+Expose a checkbox and intensity slider called the blur lens. The lens is enabled by default but remains optional. When enabled, the text preview applies a capped CSS blur derived from the WCAG ratio and multiplied by the user's chosen intensity. The UI always keeps the underlying ratio, APCA score, and pass states visible. The target-aware boundary is recorded in ADR 0006.
 
 ## Consequences
 

@@ -9,7 +9,7 @@ Contrast Lens is a local-first visual checker for the relationship between two c
 - Accepts HEX, RGB, HSL, LCH, and OKLCH input values.
 - Shows a static, proportional ratio scale plus three realistic samples: body, large type, and UI/graphics.
 - Includes a draggable HSV contrast map with live WCAG 3, 4.5, and 7 guide lines; switch between foreground and background editing.
-- Offers an optional, adjustable blur lens driven by the contrast result.
+- Starts with an adjustable blur lens enabled: text stays crisp when the selected WCAG focus passes and blurs below that target.
 - Includes click-to-explain ELI5 help bubbles and an AA/AAA focus selector with target-specific success feedback.
 - Keeps all calculations in the browser with no tracking or API calls.
 - Includes responsive layout, keyboard focus states, reduced-motion support, unit tests, e2e tests, and a repeatable benchmark.
@@ -54,7 +54,7 @@ npx wrangler pages deploy dist --project-name contrast-lens
 
 ## Notes on the blur lens
 
-The blur lens is intentionally a communication tool rather than a pass/fail criterion. It uses the WCAG ratio to derive a capped pressure value, and the slider lets a reviewer exaggerate or soften that signal. Always validate typography, layout, font rendering, and context in the real interface too.
+The blur lens is intentionally a communication tool rather than a pass/fail criterion. It starts enabled and stays clear when the selected AA or AAA target passes. Below that target, it uses a capped pressure value, and the slider lets a reviewer exaggerate or soften the signal. Always validate typography, layout, font rendering, and context in the real interface too.
 
 ## License
 

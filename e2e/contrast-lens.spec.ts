@@ -58,6 +58,36 @@ test.describe("Contrast Lens", () => {
     await expect(page.locator(".blur-note")).toContainText("blur pressure");
   });
 
+  test("enables the blur lens by default and follows the selected WCAG target", async ({
+    page,
+  }) => {
+    await page.goto("/#checker");
+    const lens = page.getByLabel("Enable blur lens");
+    await expect(lens).toBeChecked();
+    await expect(page.locator(".preview-content")).toHaveCSS(
+      "filter",
+      "blur(0px)",
+    );
+    await expect(page.locator(".blur-note")).toContainText("AA target met");
+    await expect(page.locator(".preview-status")).toContainText("AA · Clear");
+
+    await page.getByRole("button", { name: "WCAG AAA target" }).click();
+    await expect(page.locator(".preview-content")).not.toHaveCSS(
+      "filter",
+      "blur(0px)",
+    );
+    await expect(page.locator(".blur-note")).toContainText(
+      "AAA target not met",
+    );
+
+    await page.getByLabel("Foreground", { exact: true }).fill("#000000");
+    await expect(page.locator(".preview-content")).toHaveCSS(
+      "filter",
+      "blur(0px)",
+    );
+    await expect(page.locator(".preview-status")).toContainText("AAA · Clear");
+  });
+
   test("supports format switching, native pickers, and swapping", async ({
     page,
   }) => {

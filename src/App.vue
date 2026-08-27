@@ -4,6 +4,7 @@ import {
   type ColorFormat,
   type RgbColor,
   contrastResult,
+  blurPercentForTarget,
   formatColor,
   hexToRgb,
   parseColor,
@@ -21,7 +22,7 @@ const foregroundFormat = ref<ColorFormat>("HEX");
 const backgroundFormat = ref<ColorFormat>("HEX");
 const foreground = ref<RgbColor>(hexToRgb("#715BFF")!);
 const background = ref<RgbColor>(hexToRgb("#FFFFFF")!);
-const blurEnabled = ref(false);
+const blurEnabled = ref(true);
 const blurIntensity = ref(100);
 const toast = ref("");
 const activeHelp = ref<string | null>(null);
@@ -40,9 +41,13 @@ const apca = computed(() =>
     ? `+${result.value.apca.toFixed(1)}`
     : result.value.apca.toFixed(1),
 );
+const targetRatio = computed(() => (wcagTarget.value === "AA" ? 4.5 : 7));
+const targetPass = computed(() => result.value.ratio >= targetRatio.value);
 const effectiveBlur = computed(() =>
   blurEnabled.value
-    ? (result.value.blurPercent * blurIntensity.value) / 100
+    ? (blurPercentForTarget(result.value.ratio, targetRatio.value) *
+        blurIntensity.value) /
+      100
     : 0,
 );
 const blurPixels = computed(
@@ -51,12 +56,10 @@ const blurPixels = computed(
 const foregroundHex = computed(() => rgbToHex(foreground.value));
 const backgroundHex = computed(() => rgbToHex(background.value));
 const blurCopy = computed(() =>
-  result.value.blurPercent === 0
-    ? "No blur needed — this pairing is crisp."
-    : `${result.value.blurPercent}% blur pressure at this contrast.`,
+  targetPass.value
+    ? `${wcagTarget.value} target met — text stays clear.`
+    : `${wcagTarget.value} target not met — ${effectiveBlur.value}% blur pressure at this contrast.`,
 );
-const targetRatio = computed(() => (wcagTarget.value === "AA" ? 4.5 : 7));
-const targetPass = computed(() => result.value.ratio >= targetRatio.value);
 const ratioThresholds = [
   { value: 3, label: "UI / large" },
   { value: 4.5, label: "AA" },
@@ -989,8 +992,8 @@ onMounted(() => {
                   class="help-popover"
                   :style="helpStyle"
                   role="tooltip"
-                  >A visual hint, not a pass/fail test. Low contrast creates
-                  more blur.</span
+                  >A visual hint. Your selected WCAG target decides whether the
+                  sample stays crisp or gets blurred.</span
                 ></span
               >
             </div>
@@ -1057,8 +1060,12 @@ onMounted(() => {
             </div>
             <span
               class="preview-status"
-              :class="{ 'preview-status-pass': status(4.5) === 'Pass' }"
-              >{{ status(4.5) === "Pass" ? "Comfortable" : "Needs attention" }}
+              :class="{ 'preview-status-pass': targetPass }"
+              >{{
+                targetPass
+                  ? `${wcagTarget} · Clear`
+                  : `${wcagTarget} · Needs attention`
+              }}
               <i></i
             ></span>
           </div>

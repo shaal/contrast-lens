@@ -178,6 +178,10 @@ export function blurPercent(ratio: number): number {
   return round(clamp(1 - (ratio - 1) / 20) ** 2 * 100, 0);
 }
 
+export function blurPercentForTarget(ratio: number, threshold: number): number {
+  return ratio >= threshold ? 0 : blurPercent(ratio);
+}
+
 export function contrastResult(foreground: RgbColor, background: RgbColor): ContrastResult {
   const ratio = wcagContrastRatio(foreground, background);
   return { ratio, apca: apcaContrast(foreground, background), blurPercent: blurPercent(ratio), foreground, background };
@@ -233,4 +237,3 @@ function rgbToOklch(color: RgbColor): [number, number, number] {
   const labB = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
   return [labL, Math.sqrt(labA ** 2 + labB ** 2), ((Math.atan2(labB, labA) * 180) / Math.PI + 360) % 360];
 }
-
