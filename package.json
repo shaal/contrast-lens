@@ -1,0 +1,44 @@
+{
+  "name": "contrast-lens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A visual WCAG 2 and APCA contrast checker with an optional blur lens.",
+  "keywords": [
+    "accessibility",
+    "apca",
+    "contrast",
+    "wcag",
+    "angular"
+  ],
+  "scripts": {
+    "start": "ng serve",
+    "build": "ng build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test",
+    "e2e:headed": "playwright test --headed",
+    "bench": "tsx bench/contrast.bench.ts",
+    "check": "npm run build && npm test && npm run e2e"
+  },
+  "dependencies": {
+    "@angular/animations": "^20.1.0",
+    "@angular/common": "^20.1.0",
+    "@angular/compiler": "^20.1.0",
+    "@angular/core": "^20.1.0",
+    "@angular/forms": "^20.1.0",
+    "@angular/platform-browser": "^20.1.0",
+    "@angular/router": "^20.1.0",
+    "zone.js": "^0.15.1"
+  },
+  "devDependencies": {
+    "@angular/build": "^20.1.0",
+    "@angular/cli": "^20.1.0",
+    "@angular/compiler-cli": "^20.1.0",
+    "@playwright/test": "^1.54.0",
+    "@types/node": "^22.15.0",
+    "jsdom": "^26.1.0",
+    "tsx": "^4.19.4",
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.4"
+  }
+}
