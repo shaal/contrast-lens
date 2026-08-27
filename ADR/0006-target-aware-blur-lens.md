@@ -13,7 +13,7 @@ Enable the blur lens by default, while keeping the checkbox available for users 
 
 - AA keeps the preview clear at ratios of 4.5:1 and above.
 - AAA keeps the preview clear at ratios of 7:1 and above.
-- Below the selected target, a target-relative curve applies 100% blur at 1:1 and 0% at the selected threshold. Its 1.47 power curve puts 3:1 at about 29% in AA mode and 4.5:1 at about 28% in AAA mode. A 10% minimum makes even a tiny failure visible. The result is then scaled by the intensity slider.
+- Below the selected target, a gradual CSS-pixel scale is used: 1:1 is 10px, the previous WCAG level is 3px, just below the selected target is 1px, and the passing target is 0px. For AA the previous level is 3:1; for AAA it is 4.5:1. Values between anchors interpolate, then the result is scaled by the intensity slider.
 
 The numeric WCAG and APCA results remain the source of truth; blur is only a visual aid.
 

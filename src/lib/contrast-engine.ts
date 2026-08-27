@@ -178,11 +178,20 @@ export function blurPercent(ratio: number): number {
   return round(clamp(1 - (ratio - 1) / 20) ** 2 * 100, 0);
 }
 
-export function blurPercentForTarget(ratio: number, threshold: number): number {
+export function blurPixelsForTarget(ratio: number, threshold: number): number {
   if (ratio >= threshold) return 0;
-  const distanceToTarget = (threshold - ratio) / (threshold - 1);
-  const curvePercent = round(clamp(distanceToTarget) ** 1.47 * 100, 0);
-  return Math.max(10, curvePercent);
+
+  const previousThreshold = threshold > 4.5 ? 4.5 : 3;
+  const safeRatio = Math.max(1, ratio);
+  if (safeRatio > previousThreshold) {
+    const progress = clamp(
+      (safeRatio - previousThreshold) / (threshold - previousThreshold),
+    );
+    return round(3 - progress * 2, 1);
+  }
+
+  const progress = clamp((safeRatio - 1) / (previousThreshold - 1));
+  return round(10 - progress * 7, 1);
 }
 
 export function contrastResult(foreground: RgbColor, background: RgbColor): ContrastResult {

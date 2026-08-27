@@ -4,7 +4,7 @@ import {
   type ColorFormat,
   type RgbColor,
   contrastResult,
-  blurPercentForTarget,
+  blurPixelsForTarget,
   formatColor,
   hexToRgb,
   parseColor,
@@ -43,16 +43,16 @@ const apca = computed(() =>
 );
 const targetRatio = computed(() => (wcagTarget.value === "AA" ? 4.5 : 7));
 const targetPass = computed(() => result.value.ratio >= targetRatio.value);
-const effectiveBlur = computed(() =>
+const effectiveBlurPixels = computed(() =>
   blurEnabled.value
-    ? (blurPercentForTarget(result.value.ratio, targetRatio.value) *
+    ? (blurPixelsForTarget(result.value.ratio, targetRatio.value) *
         blurIntensity.value) /
       100
     : 0,
 );
-const blurPixels = computed(
-  () => `${((effectiveBlur.value / 100) * 3.6).toFixed(2)}px`,
-);
+const formatBlurPixels = (value: number): string =>
+  `${Number(value.toFixed(1))}px`;
+const blurPixels = computed(() => formatBlurPixels(effectiveBlurPixels.value));
 const foregroundHex = computed(() => rgbToHex(foreground.value));
 const backgroundHex = computed(() => rgbToHex(background.value));
 const blurCopy = computed(() =>
@@ -1030,15 +1030,13 @@ onMounted(() => {
             <div
               class="blur-level"
               :class="{
-                'blur-level-clear': blurEnabled && effectiveBlur === 0,
+                'blur-level-clear': blurEnabled && effectiveBlurPixels === 0,
                 'blur-level-disabled': !blurEnabled,
               }"
               aria-live="polite"
             >
               <span>Applied blur</span>
-              <strong>{{
-                blurEnabled ? `${effectiveBlur.toFixed(0)}%` : "Off"
-              }}</strong>
+              <strong>{{ blurEnabled ? blurPixels : "Off" }}</strong>
             </div>
             <p class="blur-note">
               <span aria-hidden="true">◌</span>

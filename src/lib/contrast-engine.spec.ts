@@ -7,7 +7,7 @@ import {
 } from "./color-map";
 import {
   apcaContrast,
-  blurPercentForTarget,
+  blurPixelsForTarget,
   contrastResult,
   formatColor,
   hexToRgb,
@@ -65,15 +65,16 @@ describe("contrast engine", () => {
     expect(contrastResult(white, white).blurPercent).toBe(100);
   });
 
-  it("uses the selected WCAG target to decide when the lens is clear", () => {
-    expect(blurPercentForTarget(1, 4.5)).toBe(100);
-    expect(blurPercentForTarget(3, 4.5)).toBe(29);
-    expect(blurPercentForTarget(4.499, 4.5)).toBe(10);
-    expect(blurPercentForTarget(4.5, 4.5)).toBe(0);
-    expect(blurPercentForTarget(4.52, 7)).toBe(27);
-    expect(blurPercentForTarget(3, 7)).toBe(55);
-    expect(blurPercentForTarget(4.5, 7)).toBe(28);
-    expect(blurPercentForTarget(7, 7)).toBe(0);
+  it("uses gradual CSS blur anchors for the selected WCAG target", () => {
+    expect(blurPixelsForTarget(1, 4.5)).toBe(10);
+    expect(blurPixelsForTarget(3, 4.5)).toBe(3);
+    expect(blurPixelsForTarget(4.499, 4.5)).toBe(1);
+    expect(blurPixelsForTarget(4.5, 4.5)).toBe(0);
+    expect(blurPixelsForTarget(1, 7)).toBe(10);
+    expect(blurPixelsForTarget(3, 7)).toBe(6);
+    expect(blurPixelsForTarget(4.5, 7)).toBe(3);
+    expect(blurPixelsForTarget(6.999, 7)).toBe(1);
+    expect(blurPixelsForTarget(7, 7)).toBe(0);
   });
 
   it("round trips the HSV coordinates used by the contrast map", () => {

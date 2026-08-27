@@ -9,7 +9,7 @@ Contrast Lens is a local-first visual checker for the relationship between two c
 - Accepts HEX, RGB, HSL, LCH, and OKLCH input values.
 - Shows a static, proportional ratio scale plus three realistic samples: body, large type, and UI/graphics.
 - Includes a draggable HSV contrast map with live WCAG 3, 4.5, and 7 guide lines; switch between foreground and background editing.
-- Starts with an adjustable blur lens enabled: text stays crisp when the selected WCAG focus passes and blurs below that target. The UI shows the actual applied blur percentage.
+- Starts with an adjustable blur lens enabled: text stays crisp when the selected WCAG focus passes and blurs below that target. The UI shows the actual applied CSS blur in pixels.
 - Includes click-to-explain ELI5 help bubbles and an AA/AAA focus selector with target-specific success feedback.
 - Keeps all calculations in the browser with no tracking or API calls.
 - Includes responsive layout, keyboard focus states, reduced-motion support, unit tests, e2e tests, and a repeatable benchmark.
@@ -54,7 +54,7 @@ npx wrangler pages deploy dist --project-name contrast-lens
 
 ## Notes on the blur lens
 
-The blur lens is intentionally a communication tool rather than a pass/fail criterion. It starts enabled and stays clear when the selected AA or AAA target passes. Below that target, it uses a target-relative curve: `1:1` is `100%` blur, the selected threshold is `0%`, and every failing pairing gets at least `10%` (`3:1` is about `29%` in AA mode; `4.5:1` is about `28%` in AAA mode). The slider lets a reviewer exaggerate or soften the signal. Always validate typography, layout, font rendering, and context in the real interface too.
+The blur lens is intentionally a communication tool rather than a pass/fail criterion. It starts enabled and stays clear when the selected AA or AAA target passes. Below that target, it uses gradual CSS blur anchors: for AA, `1:1` is `10px`, `3:1` is `3px`, just below `4.5:1` is `1px`, and `4.5:1` is `0px`; for AAA, the corresponding anchors are `1:1 → 10px`, `4.5:1 → 3px`, just below `7:1 → 1px`, and `7:1 → 0px`. The slider lets a reviewer exaggerate or soften the signal. Always validate typography, layout, font rendering, and context in the real interface too.
 
 ## License
 
