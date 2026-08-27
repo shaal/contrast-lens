@@ -1,4 +1,4 @@
-<main class="page-shell">
+<main class="page-shell" (click)="closeHelp()">
   <header class="site-header content-width">
     <a class="brand" href="/" aria-label="Contrast Lens home">
       <span class="brand-mark" aria-hidden="true">◒</span>
@@ -39,7 +39,12 @@
         <p class="eyebrow eyebrow-dark"><span class="eyebrow-dot"></span> The contrast desk</p>
         <h2 id="checker-heading">Find the signal<br /><em>in your colors.</em></h2>
       </div>
-      <p class="section-aside">Use the fields or the color pickers.<br />Every update is calculated locally.</p>
+      <p class="section-aside">Use the fields or the color pickers.<br />Every update is calculated locally.
+        <span class="help-wrap help-wrap-inline">
+          <button class="help-button" type="button" aria-label="Why are calculations local?" [attr.aria-expanded]="activeHelp() === 'local'" (click)="$event.stopPropagation(); toggleHelp('local', $event)">?</button>
+          <span class="help-popover" *ngIf="activeHelp() === 'local'" [style.top.px]="helpPosition()?.top" [style.left.px]="helpPosition()?.left" role="tooltip">Your colors stay in this browser. Nothing is sent anywhere.</span>
+        </span>
+      </p>
     </div>
 
     <div class="checker-card">
@@ -52,7 +57,12 @@
       <div class="color-fields">
         <article class="color-field color-field-foreground">
           <div class="field-label-row">
-            <label for="foreground-value">Foreground</label>
+            <span class="label-with-help"><label for="foreground-value">Foreground</label>
+              <span class="help-wrap">
+                <button class="help-button" type="button" aria-label="What is a foreground color?" [attr.aria-expanded]="activeHelp() === 'foreground'" (click)="$event.stopPropagation(); toggleHelp('foreground', $event)">?</button>
+                <span class="help-popover" *ngIf="activeHelp() === 'foreground'" [style.top.px]="helpPosition()?.top" [style.left.px]="helpPosition()?.left" role="tooltip">The color used for your text, icons, or other marks.</span>
+              </span>
+            </span>
             <span class="field-role">Text / icon</span>
           </div>
           <div class="field-input-row">
@@ -61,6 +71,10 @@
             <select class="format-select" aria-label="Foreground format" [value]="foregroundFormat()" (change)="updateFormat('foreground', $event)">
               <option *ngFor="let format of formats; trackBy: trackFormat" [value]="format">{{ formatLabel(format) }}</option>
             </select>
+            <span class="help-wrap format-help">
+              <button class="help-button" type="button" aria-label="What are color formats?" [attr.aria-expanded]="activeHelp() === 'formats'" (click)="$event.stopPropagation(); toggleHelp('formats', $event)">?</button>
+              <span class="help-popover" *ngIf="activeHelp() === 'formats'" [style.top.px]="helpPosition()?.top" [style.left.px]="helpPosition()?.left" role="tooltip">Pick how you want to type a color. They are different ways to describe the same color.</span>
+            </span>
           </div>
           <div class="field-meta"><span class="color-dot dot-purple"></span>{{ foregroundHex() }} <span class="meta-separator">·</span> {{ foreground().r | number:'1.0-0' }}, {{ foreground().g | number:'1.0-0' }}, {{ foreground().b | number:'1.0-0' }}</div>
         </article>
@@ -69,7 +83,12 @@
 
         <article class="color-field color-field-background">
           <div class="field-label-row">
-            <label for="background-value">Background</label>
+            <span class="label-with-help"><label for="background-value">Background</label>
+              <span class="help-wrap">
+                <button class="help-button" type="button" aria-label="What is a background color?" [attr.aria-expanded]="activeHelp() === 'background'" (click)="$event.stopPropagation(); toggleHelp('background', $event)">?</button>
+                <span class="help-popover" *ngIf="activeHelp() === 'background'" [style.top.px]="helpPosition()?.top" [style.left.px]="helpPosition()?.left" role="tooltip">The surface sitting behind your text, icons, or other marks.</span>
+              </span>
+            </span>
             <span class="field-role">Surface / canvas</span>
           </div>
           <div class="field-input-row">
@@ -78,6 +97,10 @@
             <select class="format-select" aria-label="Background format" [value]="backgroundFormat()" (change)="updateFormat('background', $event)">
               <option *ngFor="let format of formats; trackBy: trackFormat" [value]="format">{{ formatLabel(format) }}</option>
             </select>
+            <span class="help-wrap format-help">
+              <button class="help-button" type="button" aria-label="What are color formats?" [attr.aria-expanded]="activeHelp() === 'formats'" (click)="$event.stopPropagation(); toggleHelp('formats', $event)">?</button>
+              <span class="help-popover" *ngIf="activeHelp() === 'formats'" [style.top.px]="helpPosition()?.top" [style.left.px]="helpPosition()?.left" role="tooltip">Pick how you want to type a color. They are different ways to describe the same color.</span>
+            </span>
           </div>
           <div class="field-meta"><span class="color-dot dot-white"></span>{{ backgroundHex() }} <span class="meta-separator">·</span> {{ background().r | number:'1.0-0' }}, {{ background().g | number:'1.0-0' }}, {{ background().b | number:'1.0-0' }}</div>
         </article>
@@ -85,29 +108,70 @@
 
       <div class="result-grid">
         <div class="result-main">
-          <div class="result-kicker">The relationship</div>
+          <div class="result-kicker-line"><div class="result-kicker">The relationship</div>
+            <span class="help-wrap">
+              <button class="help-button" type="button" aria-label="What is contrast ratio?" [attr.aria-expanded]="activeHelp() === 'ratio'" (click)="$event.stopPropagation(); toggleHelp('ratio', $event)">?</button>
+              <span class="help-popover" *ngIf="activeHelp() === 'ratio'" [style.top.px]="helpPosition()?.top" [style.left.px]="helpPosition()?.left" role="tooltip">How different the two colors are. 1:1 is the lowest; 21:1 is the highest.</span>
+            </span>
+          </div>
           <div class="ratio-line"><span class="ratio-number">{{ ratio() }}</span><span class="ratio-unit">:1</span></div>
           <p class="result-description">WCAG 2 contrast ratio</p>
           <div class="ratio-bar" aria-hidden="true"><span [style.width.%]="contrastPercent()"></span><i [style.left]="markerLeft()"></i></div>
           <div class="bar-labels"><span>Low signal</span><span>4.5 AA</span><span>7 AAA</span><span>21 Max</span></div>
         </div>
         <div class="score-column">
-          <div class="score-card">
-            <div class="score-title"><span class="score-icon">Aa</span> WCAG 2</div>
+          <div class="score-card" [class.score-card-focused]="wcagTarget() === 'AA'">
+            <div class="score-title"><span class="score-icon">Aa</span> WCAG 2
+              <span class="help-wrap">
+                <button class="help-button" type="button" aria-label="What is WCAG 2?" [attr.aria-expanded]="activeHelp() === 'wcag'" (click)="$event.stopPropagation(); toggleHelp('wcag', $event)">?</button>
+                <span class="help-popover" *ngIf="activeHelp() === 'wcag'" [style.top.px]="helpPosition()?.top" [style.left.px]="helpPosition()?.left" role="tooltip">The common accessibility check. AA asks for 4.5:1; AAA asks for 7:1 for normal text.</span>
+              </span>
+            </div>
             <div class="score-value">{{ ratio() }}<small>:1</small></div>
             <div class="score-pills"><span [class.pass]="status(4.5) === 'Pass'">AA {{ status(4.5) === 'Pass' ? 'pass' : 'review' }}</span><span [class.pass]="status(7) === 'Pass'">AAA {{ status(7) === 'Pass' ? 'pass' : 'review' }}</span></div>
           </div>
           <div class="score-card score-card-apca">
-            <div class="score-title"><span class="score-icon score-icon-dark">Lc</span> APCA</div>
+            <div class="score-title"><span class="score-icon score-icon-dark">Lc</span> APCA
+              <span class="help-wrap">
+                <button class="help-button" type="button" aria-label="What is APCA?" [attr.aria-expanded]="activeHelp() === 'apca'" (click)="$event.stopPropagation(); toggleHelp('apca', $event)">?</button>
+                <span class="help-popover" *ngIf="activeHelp() === 'apca'" [style.top.px]="helpPosition()?.top" [style.left.px]="helpPosition()?.left" role="tooltip">A newer, directional readability score. Lc 60 is a useful body-text guide.</span>
+              </span>
+            </div>
             <div class="score-value">{{ apca() }}</div>
             <div class="score-pills"><span [class.pass]="apcaStatus(60) === 'Pass'">Body {{ apcaStatus(60) === 'Pass' ? 'pass' : 'review' }}</span><span [class.pass]="apcaStatus(45) === 'Pass'">Large {{ apcaStatus(45) === 'Pass' ? 'pass' : 'review' }}</span></div>
           </div>
         </div>
       </div>
 
+      <div class="focus-panel" [class.focus-panel-success]="targetPass()">
+        <div class="focus-setting">
+          <div class="focus-heading"><span>Choose your WCAG focus</span>
+            <span class="help-wrap">
+              <button class="help-button" type="button" aria-label="What is WCAG focus?" [attr.aria-expanded]="activeHelp() === 'focus'" (click)="$event.stopPropagation(); toggleHelp('focus', $event)">?</button>
+              <span class="help-popover" *ngIf="activeHelp() === 'focus'" [style.top.px]="helpPosition()?.top" [style.left.px]="helpPosition()?.left" role="tooltip">AA is the usual minimum. AAA is a stricter goal for more readable text.</span>
+            </span>
+          </div>
+          <div class="focus-options" role="group" aria-label="Choose WCAG focus">
+            <button type="button" [class.focus-option-selected]="wcagTarget() === 'AA'" [attr.aria-pressed]="wcagTarget() === 'AA'" aria-label="WCAG AA target" (click)="setWcagTarget('AA')"><strong>AA</strong><span>everyday target</span></button>
+            <button type="button" [class.focus-option-selected]="wcagTarget() === 'AAA'" [attr.aria-pressed]="wcagTarget() === 'AAA'" aria-label="WCAG AAA target" (click)="setWcagTarget('AAA')"><strong>AAA</strong><span>stricter target</span></button>
+          </div>
+        </div>
+        <div class="focus-feedback">
+          <span class="focus-feedback-kicker">Your selected target</span>
+          <strong>{{ wcagTarget() }} <span>{{ targetPass() ? 'success' : 'review' }}</span></strong>
+          <p>{{ targetCopy() }}</p>
+          <span class="focus-check"><i [class.focus-check-success]="targetPass()">{{ targetPass() ? '✓' : '!' }}</i> {{ ratio() }}:1 current / {{ targetRatio().toFixed(1) }}:1 required</span>
+        </div>
+      </div>
+
       <div class="preview-row">
         <div class="preview-copy">
-          <p class="eyebrow eyebrow-dark"><span class="eyebrow-dot"></span> Readability preview</p>
+          <div class="preview-eyebrow"><p class="eyebrow eyebrow-dark"><span class="eyebrow-dot"></span> Readability preview</p>
+            <span class="help-wrap">
+              <button class="help-button" type="button" aria-label="What is the blur lens?" [attr.aria-expanded]="activeHelp() === 'blur'" (click)="$event.stopPropagation(); toggleHelp('blur', $event)">?</button>
+              <span class="help-popover" *ngIf="activeHelp() === 'blur'" [style.top.px]="helpPosition()?.top" [style.left.px]="helpPosition()?.left" role="tooltip">A visual hint, not a pass/fail test. Low contrast creates more blur.</span>
+            </span>
+          </div>
           <h3>Don’t just check it.<br /><em>Look at it.</em></h3>
           <p>Blur pressure makes the cost of low contrast perceptible. Turn on the lens and tune the intensity to simulate a quick readability gut-check.</p>
           <label class="toggle-row">

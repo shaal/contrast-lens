@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   ColorFormat,
@@ -11,6 +11,8 @@ import {
   parseColor,
   rgbToHex
 } from './contrast-engine';
+
+type WcagTarget = 'AA' | 'AAA';
 
 @Component({
   selector: 'lens-root',
@@ -31,6 +33,9 @@ export class AppComponent {
   readonly blurEnabled = signal(false);
   readonly blurIntensity = signal(100);
   readonly toast = signal('');
+  readonly activeHelp = signal<string | null>(null);
+  readonly helpPosition = signal<{ top: number; left: number } | null>(null);
+  readonly wcagTarget = signal<WcagTarget>('AA');
 
   readonly result = computed(() => contrastResult(this.foreground(), this.background()));
   readonly ratio = computed(() => this.result().ratio.toFixed(2));
@@ -42,6 +47,11 @@ export class AppComponent {
   readonly contrastPercent = computed(() => Math.min(100, Math.max(0, (this.result().ratio - 1) / 20 * 100)));
   readonly markerLeft = computed(() => `${12 + this.contrastPercent() * 0.76}%`);
   readonly blurCopy = computed(() => this.result().blurPercent === 0 ? 'No blur needed — this pairing is crisp.' : `${this.result().blurPercent}% blur pressure at this contrast.`);
+  readonly targetRatio = computed(() => this.wcagTarget() === 'AA' ? 4.5 : 7);
+  readonly targetPass = computed(() => this.result().ratio >= this.targetRatio());
+  readonly targetCopy = computed(() => this.targetPass()
+    ? `This pair reaches the ${this.wcagTarget()} target for normal text.`
+    : `This pair is below the ${this.wcagTarget()} target. Try a darker text color or a lighter background.`);
 
   constructor() {
     const params = new URLSearchParams(window.location.search);
@@ -61,6 +71,36 @@ export class AppComponent {
       this.backgroundInput.set(rgbToHex(parsed));
       this.background.set(parsed);
     }
+  }
+
+  setWcagTarget(target: WcagTarget): void {
+    this.wcagTarget.set(target);
+  }
+
+  toggleHelp(id: string, event: MouseEvent): void {
+    if (this.activeHelp() === id) {
+      this.closeHelp();
+      return;
+    }
+    const button = event.currentTarget as HTMLElement;
+    const bounds = button.getBoundingClientRect();
+    const width = Math.min(235, window.innerWidth - 28);
+    const preferredLeft = bounds.left + bounds.width / 2 - width / 2;
+    const left = Math.min(Math.max(14, preferredLeft), window.innerWidth - width - 14);
+    const preferredTop = bounds.bottom + 10;
+    const top = preferredTop + 104 < window.innerHeight ? preferredTop : Math.max(14, bounds.top - 114);
+    this.helpPosition.set({ top, left });
+    this.activeHelp.set(id);
+  }
+
+  closeHelp(): void {
+    this.activeHelp.set(null);
+    this.helpPosition.set(null);
+  }
+
+  @HostListener('document:keydown.escape')
+  handleEscape(): void {
+    this.closeHelp();
   }
 
   updateColor(side: 'foreground' | 'background', event: Event): void {

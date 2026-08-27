@@ -31,6 +31,27 @@ test.describe('Contrast Lens', () => {
     await expect(page.getByLabel('Background', { exact: true })).toHaveValue('rgb(113 91 255)');
   });
 
+  test('lets users choose AA or AAA and shows the chosen success state', async ({ page }) => {
+    await page.goto('/#checker');
+    await expect(page.getByRole('button', { name: 'WCAG AA target' })).toHaveAttribute('aria-pressed', 'true');
+    await page.getByRole('button', { name: 'WCAG AAA target' }).click();
+    await expect(page.locator('.focus-feedback')).toContainText('AAA review');
+
+    await page.getByLabel('Foreground', { exact: true }).fill('#000000');
+    await expect(page.locator('.focus-feedback')).toContainText('AAA success');
+    await expect(page.locator('.focus-panel')).toHaveClass(/focus-panel-success/);
+  });
+
+  test('reveals concise explanations from question-mark buttons', async ({ page }) => {
+    await page.goto('/#checker');
+    await page.getByRole('button', { name: 'What is APCA?' }).click();
+    await expect(page.getByRole('tooltip')).toContainText('directional readability score');
+
+    await page.getByRole('button', { name: 'What is WCAG focus?' }).click();
+    await expect(page.getByRole('tooltip')).toContainText('AA is the usual minimum');
+    await expect(page.getByRole('tooltip')).toHaveCount(1);
+  });
+
   test('keeps the checker keyboard and reduced-motion friendly', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Check a pair' }).press('Enter');

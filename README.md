@@ -9,6 +9,7 @@ Contrast Lens is a local-first visual checker for the relationship between two c
 - Accepts HEX, RGB, HSL, LCH, and OKLCH input values.
 - Shows a contrast ramp and three realistic samples: body, large type, and UI/graphics.
 - Offers an optional, adjustable blur lens driven by the contrast result.
+- Includes click-to-explain ELI5 help bubbles and an AA/AAA focus selector with target-specific success feedback.
 - Keeps all calculations in the browser with no tracking or API calls.
 - Includes responsive layout, keyboard focus states, reduced-motion support, unit tests, e2e tests, and a repeatable benchmark.
 
