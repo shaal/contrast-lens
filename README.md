@@ -1,6 +1,6 @@
 # Contrast Lens
 
-Contrast Lens is a local-first visual checker for the relationship between two colors. It combines the familiar WCAG 2 ratio with directional APCA Lc, then adds an optional blur lens so low contrast is something you can see — not just a number you have to interpret.
+Contrast Lens is a local-first visual checker for the relationship between two colors. It combines the familiar WCAG 2 ratio with directional APCA Lc, then adds an optional blur lens so low contrast is something you can see — not just a number you have to interpret. The UI is a readable Vue 3 single-file component backed by a framework-free TypeScript contrast engine.
 
 ## What it does
 
@@ -40,7 +40,16 @@ npx playwright install chromium
 
 ## Architecture
 
-The framework-free engine lives in [`src/app/contrast-engine.ts`](src/app/contrast-engine.ts). It owns parsing, sRGB conversion, luminance, WCAG, APCA, and the blur signal. The Angular component only owns interaction state and presentation. The decisions behind the stack are recorded in [`ADR/`](ADR/).
+The framework-free engine lives in [`src/lib/contrast-engine.ts`](src/lib/contrast-engine.ts). It owns parsing, sRGB conversion, luminance, WCAG, APCA, and the blur signal. The Vue single-file component only owns interaction state and presentation. The decisions behind the stack are recorded in [`ADR/`](ADR/).
+
+## Cloudflare Pages
+
+The production build is already configured for Cloudflare Pages: use `npm run build` as the build command and `dist` as the output directory. The included `wrangler.toml` also lets you deploy with Wrangler later:
+
+```bash
+npm run build
+npx wrangler pages deploy dist --project-name contrast-lens
+```
 
 ## Notes on the blur lens
 

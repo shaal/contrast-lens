@@ -1,5 +1,5 @@
-import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
-import { AppComponent } from './app/app.component';
+import { createApp } from "vue";
+import App from "./App.vue";
+import "./styles.scss";
 
-bootstrapApplication(AppComponent, appConfig).catch((error: unknown) => console.error(error));
+createApp(App).mount("#app");

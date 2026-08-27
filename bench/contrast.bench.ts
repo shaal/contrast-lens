@@ -1,5 +1,5 @@
 import { performance } from 'node:perf_hooks';
-import { contrastResult, hexToRgb, parseColor } from '../src/app/contrast-engine';
+import { contrastResult, hexToRgb, parseColor } from '../src/lib/contrast-engine';
 
 const foreground = hexToRgb('#715BFF')!;
 const background = hexToRgb('#FFFFFF')!;

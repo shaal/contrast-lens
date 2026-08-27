@@ -40,3 +40,4 @@ describe('contrast engine', () => {
     expect(contrastResult(white, white).blurPercent).toBe(100);
   });
 });
+

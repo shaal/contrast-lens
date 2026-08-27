@@ -19,10 +19,11 @@
     "useDefineForClassFields": false,
     "lib": ["ES2022", "DOM"]
   },
-  "angularCompilerOptions": {
-    "enableI18nLegacyMessageIdFormat": false,
-    "strictInjectionParameters": true,
-    "strictInputAccessModifiers": true,
-    "strictTemplates": true
-  }
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.vue",
+    "vite.config.ts",
+    "playwright.config.ts",
+    "bench/**/*.ts"
+  ]
 }
