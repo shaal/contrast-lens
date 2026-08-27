@@ -7,7 +7,7 @@ Contrast Lens is a local-first visual checker for the relationship between two c
 - Checks WCAG 2 contrast ratio with AA and AAA states.
 - Checks directional APCA 0.0.98G with body and large-type guides.
 - Accepts HEX, RGB, HSL, LCH, and OKLCH input values.
-- Shows a contrast ramp and three realistic samples: body, large type, and UI/graphics.
+- Shows a static, proportional ratio scale plus three realistic samples: body, large type, and UI/graphics.
 - Includes a draggable HSV contrast map with live WCAG 3, 4.5, and 7 guide lines; switch between foreground and background editing.
 - Offers an optional, adjustable blur lens driven by the contrast result.
 - Includes click-to-explain ELI5 help bubbles and an AA/AAA focus selector with target-specific success feedback.

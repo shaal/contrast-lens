@@ -50,10 +50,6 @@ const blurPixels = computed(
 );
 const foregroundHex = computed(() => rgbToHex(foreground.value));
 const backgroundHex = computed(() => rgbToHex(background.value));
-const contrastPercent = computed(() =>
-  Math.min(100, Math.max(0, ((result.value.ratio - 1) / 20) * 100)),
-);
-const markerLeft = computed(() => `${12 + contrastPercent.value * 0.76}%`);
 const blurCopy = computed(() =>
   result.value.blurPercent === 0
     ? "No blur needed — this pairing is crisp."
@@ -61,6 +57,18 @@ const blurCopy = computed(() =>
 );
 const targetRatio = computed(() => (wcagTarget.value === "AA" ? 4.5 : 7));
 const targetPass = computed(() => result.value.ratio >= targetRatio.value);
+const ratioThresholds = [
+  { value: 3, label: "UI / large" },
+  { value: 4.5, label: "AA" },
+  { value: 7, label: "AAA" },
+] as const;
+const ratioPosition = (value: number): string =>
+  `${Math.min(100, Math.max(0, ((value - 1) / 20) * 100))}%`;
+const currentRatioPosition = computed(() => ratioPosition(result.value.ratio));
+const ratioScaleLabel = computed(
+  () =>
+    `Static contrast scale from 1 to 21. Current ratio is ${ratio.value} to 1. Thresholds are 3 for UI and large text, 4.5 for AA, and 7 for AAA.`,
+);
 const targetCopy = computed(() =>
   targetPass.value
     ? `This pair reaches the ${wcagTarget.value} target for normal text.`
@@ -787,14 +795,43 @@ onMounted(() => {
               <span class="ratio-number">{{ ratio }}</span
               ><span class="ratio-unit">:1</span>
             </div>
-            <p class="result-description">WCAG 2 contrast ratio</p>
-            <div class="ratio-bar" aria-hidden="true">
-              <span :style="{ width: `${contrastPercent}%` }"></span
-              ><i :style="{ left: markerLeft }"></i>
+            <div class="result-description">
+              <span>WCAG 2 contrast ratio</span>
+              <span class="static-scale-note"
+                >Static scale · actual ratio positions</span
+              >
             </div>
-            <div class="bar-labels">
-              <span>Low signal</span><span>4.5 AA</span><span>7 AAA</span
-              ><span>21 Max</span>
+            <div class="ratio-scale" role="img" :aria-label="ratioScaleLabel">
+              <div class="ratio-scale-track" aria-hidden="true"></div>
+              <span
+                v-for="threshold in ratioThresholds"
+                :key="threshold.value"
+                class="ratio-scale-threshold"
+                :class="{
+                  'ratio-scale-threshold-focus':
+                    threshold.value === targetRatio,
+                }"
+                :style="{ left: ratioPosition(threshold.value) }"
+              >
+                <i aria-hidden="true"></i><strong>{{ threshold.value }}</strong>
+              </span>
+              <span
+                class="ratio-scale-current"
+                :style="{ left: currentRatioPosition }"
+              >
+                <strong>{{ ratio }}:1</strong><small>current</small>
+                <i aria-hidden="true"></i>
+              </span>
+            </div>
+            <div class="ratio-scale-endpoints" aria-hidden="true">
+              <span>1:1 · no difference</span><span>21:1 · maximum</span>
+            </div>
+            <div class="ratio-scale-key" aria-hidden="true">
+              <span
+                ><i class="scale-key-dot scale-key-ui"></i>3 UI / large</span
+              >
+              <span><i class="scale-key-dot scale-key-aa"></i>4.5 AA</span>
+              <span><i class="scale-key-dot scale-key-aaa"></i>7 AAA</span>
             </div>
           </div>
           <div class="score-column">

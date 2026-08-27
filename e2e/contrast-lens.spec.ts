@@ -13,6 +13,37 @@ test.describe("Contrast Lens", () => {
     await expect(page.getByText("WCAG 2 contrast ratio")).toBeVisible();
   });
 
+  test("shows a static ratio scale with the current 4.52 just past AA", async ({
+    page,
+  }) => {
+    await page.goto("/#checker");
+    await expect(
+      page.getByText("Static scale · actual ratio positions"),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("img", { name: /current ratio is 4\.52 to 1/i }),
+    ).toBeVisible();
+
+    const currentLeft = Number.parseFloat(
+      await page
+        .locator(".ratio-scale-current")
+        .evaluate(
+          (element) =>
+            element.getAttribute("style")!.match(/left: ([\d.]+)%/)![1],
+        ),
+    );
+    const aaLeft = Number.parseFloat(
+      await page
+        .locator(".ratio-scale-threshold")
+        .nth(1)
+        .evaluate(
+          (element) =>
+            element.getAttribute("style")!.match(/left: ([\d.]+)%/)![1],
+        ),
+    );
+    expect(currentLeft).toBeGreaterThan(aaLeft);
+  });
+
   test("updates live scores and makes the blur lens available", async ({
     page,
   }) => {
